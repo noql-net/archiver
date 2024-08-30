@@ -7,7 +7,7 @@ __author__     = "Giovanni Damiola"
 __copyright__  = "Copyright 2018, Giovanni Damiola"
 __main_name__  = 'iagitup'
 __license__    = 'GPLv3'
-__version__    = "v1.6.2"
+__version__    = "v1.7"
 
 import os
 import sys
@@ -142,8 +142,8 @@ def upload_ia(gh_repo_folder, gh_repo_data, custom_meta=None):
     bundle_filename = '{}_-_{}'.format(repo_name, pushed_date)
 
     # preparing some description
-    description_footer = 'To restore the repository download the bundle <pre><code>wget https://archive.org/download/github.com-{0}/{0}.bundle</code></pre> and run: <pre><code> git clone {0}.bundle </code></pre>'.format(bundle_filename)
-    description = '<br/> {0} <br/><br/> {1} <br/>{2}'.format(gh_repo_data['description'], get_description_from_readme(gh_repo_folder), description_footer)
+    description_footer = f'To restore the repository download the bundle <pre><code>wget https://archive.org/download/github.com-{bundle_filename}/{bundle_filename}.bundle</code></pre> and run: <pre><code> git clone {bundle_filename}.bundle </code></pre>'
+    description = f'<br/> {gh_repo_data['description']} <br/><br/> {get_description_from_readme(gh_repo_folder)} <br/>{description_footer}'
 
     # preparing uploader metadata
     uploader_url = gh_repo_data['owner']['html_url']
@@ -162,9 +162,9 @@ def upload_ia(gh_repo_folder, gh_repo_data, custom_meta=None):
     mediatype = 'software'
     subject = 'GitHub;code;software;git'
 
-    uploader = '{} - {}'.format(__main_name__, __version__)
+    uploader = f'{__main_name__} - {__version__}'
 
-    description = u'{0} <br/><br/>Source: <a href="{1}">{2}</a><br/>Uploader: <a href="{3}">{4}</a><br/>Upload date: {5}'.format(description, originalurl, originalurl, uploader_url, uploader_name, date)
+    description = f'{description} <br/><br/>Source: <a href="{originalurl}">{originalurl}</a><br/>Uploader: <a href="{uploader_url}">{uploader_name}</a><br/>Upload date: {date}'
 
     ## Creating bundle file of  the  git repo
     try:
@@ -176,12 +176,23 @@ def upload_ia(gh_repo_folder, gh_repo_data, custom_meta=None):
 
     # inizializing the internet archive item name
     # here we set the ia identifier
-    itemname = '%s-%s_-_%s' % ('github.com', repo_name, pushed_date)
-    title = '%s' % (itemname)
+    itemname = f'github.com-{repo_name}_-_{pushed_date}'
+    title = itemname
 
     #initializing the main metadata
-    meta = dict(mediatype=mediatype, creator=uploader_name, collection=collection, title=title, year=year, date=date, \
-           subject=subject, uploaded_with=uploader, originalurl=originalurl, pushed_date=raw_pushed_date, description=description)
+    meta = dict(
+        mediatype=mediatype,
+        creator=uploader_name,
+        collection=collection,
+        title=title,
+        year=year,
+        date=date,
+        subject=subject,
+        uploaded_with=uploader,
+        originalurl=originalurl,
+        pushed_date=raw_pushed_date,
+        description=description
+    )
 
     # override default metadata with any supplemental metadata provided.
     if custom_meta != None:
@@ -189,19 +200,19 @@ def upload_ia(gh_repo_folder, gh_repo_data, custom_meta=None):
 
     try:
         # upload the item to the Internet Archive
-        print("Creating item on Internet Archive: %s" % meta['title'])
+        print(f"Creating item on Internet Archive: {meta['title']}")
         item = internetarchive.get_item(itemname)
         # checking if the item already exists:
         if not item.exists:
-            print("Uploading file to the internet archive: %s" % bundle_file)
+            print(f"Uploading file to the internet archive: {bundle_file}")
             item.upload(bundle_file, metadata=meta, retries=9001, request_kwargs=dict(timeout=9001), delete=False)
             # upload the item to the Internet Archive
             print("Uploading avatar...")
             item.upload(os.path.join(gh_repo_folder, 'cover.jpg'), retries=9001, request_kwargs=dict(timeout=9001), delete=True)
         else:
             print("\nSTOP: The same repository seems already archived.")
-            print("---->>  Archived repository URL: \n \thttps://archive.org/details/%s" % itemname)
-            print("---->>  Archived git bundle file: \n \thttps://archive.org/download/{0}/{1}.bundle \n\n".format(itemname, bundle_filename))
+            print(f"---->>  Archived repository URL: \n \thttps://archive.org/details/{itemname}")
+            print(f"---->>  Archived git bundle file: \n \thttps://archive.org/download/{itemname}/{bundle_filename}.bundle \n\n")
             shutil.rmtree(gh_repo_folder)
             exit(0)
 
@@ -230,5 +241,5 @@ def check_ia_credentials():
             if noauth:
                 exit(1)
         except Exception as e:
-            msg = 'Something went wrong trying to configure your internet archive account.\n Error - {}'.format(str(e))
+            msg = f'Something went wrong trying to configure your internet archive account.\n Error - {str(e)}'
             exit(1)

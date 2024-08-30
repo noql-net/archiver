@@ -25,13 +25,10 @@ __license__    = 'GPLv3'
 __status__     = "Production/Stable"
 __version__    = "v1.7"
 
-import os
-import sys
 import shutil
 import argparse
-import json
 
-from . import iagitup
+from iagitup import iagitup
 
 PROGRAM_DESCRIPTION = 'A tool to archive a GitHub repository to the Internet Archive. \
                        The script downloads the GitHub repository, creates a git bundle and uploads \
@@ -41,18 +38,17 @@ PROGRAM_DESCRIPTION = 'A tool to archive a GitHub repository to the Internet Arc
 parser = argparse.ArgumentParser(description=PROGRAM_DESCRIPTION)
 parser.add_argument('--metadata', '-m', default=None, type=str, required=False, help="custom metadata to add to the archive.org item")
 parser.add_argument('--version', '-v', action='version', version=__version__)
-parser.add_argument('gitubeurl', type=str, help='[GITHUB REPO] to archive')
+parser.add_argument('url', type=str, help='[GITHUB REPO] to archive')
 args = parser.parse_args()
 
 def main():
     iagitup.check_ia_credentials()
 
-    URL = args.gitubeurl
+    URL = args.url
     custom_metadata = args.metadata
-    md = None
     custom_meta_dict = None
 
-    print(":: Downloading %s repository..." % URL)
+    print(f":: Downloading {URL} repository...")
     gh_repo_data, repo_folder = iagitup.repo_download(URL)
 
     # parse supplemental metadata.
@@ -63,16 +59,16 @@ def main():
             custom_meta_dict[k] = v
 
     # upload the repo on IA
-    identifier, meta, bundle_filename= iagitup.upload_ia(repo_folder, gh_repo_data, custom_meta=custom_meta_dict)
+    identifier, meta, bundle_filename = iagitup.upload_ia(repo_folder, gh_repo_data, custom_meta=custom_meta_dict)
 
     # cleaning
     shutil.rmtree(repo_folder)
 
     # output
     print("\n:: Upload FINISHED. Item information:")
-    print("Identifier: %s" % meta['title'])
-    print("Archived repository URL: \n \thttps://archive.org/details/%s" % identifier)
-    print("Archived git bundle file: \n \thttps://archive.org/download/{0}/{1}.bundle \n\n".format(identifier, bundle_filename))
+    print(f"Identifier: {meta['title']}")
+    print(f"Archived repository URL: \n \thttps://archive.org/details/{identifier}")
+    print(f"Archived git bundle file: \n \thttps://archive.org/download/{identifier}/{bundle_filename}.bundle \n\n")
 
 
 if __name__ == '__main__':

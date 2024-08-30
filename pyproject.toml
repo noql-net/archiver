@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "iagitup"
+version = "1.7.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+internetarchive = "^3.6.0"
+gitpython = "^3.1.42"
+markdown2 = "^2.4.12"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
