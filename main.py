@@ -23,7 +23,7 @@ __copyright__  = "Copyright 2018, Giovanni Damiola"
 __main_name__  = 'iagitup'
 __license__    = 'GPLv3'
 __status__     = "Production/Stable"
-__version__    = "v1.7"
+__version__    = "v1.8"
 
 import shutil
 import argparse
@@ -36,33 +36,42 @@ PROGRAM_DESCRIPTION = 'A tool to archive a GitHub repository to the Internet Arc
 
 # Configure argparser
 parser = argparse.ArgumentParser(description=PROGRAM_DESCRIPTION)
-parser.add_argument('--metadata', '-m', default=None, type=str, required=False, help="custom metadata to add to the archive.org item")
+parser.add_argument('--metadata', '-m', default=None, type=str, required=False, help='custom metadata to add to the archive.org item')
+parser.add_argument('--s3-access', '-s3a', default=None, type=str, required=False, help='Internet Archive S3 access key (from https://archive.org/account/s3.php)')
+parser.add_argument('--s3-secret', '-s3s', default=None, type=str, required=False, help='Internet Archive S3 secret key (from https://archive.org/account/s3.php)')
 parser.add_argument('--version', '-v', action='version', version=__version__)
 parser.add_argument('url', type=str, help='[GITHUB REPO] to archive')
 args = parser.parse_args()
 
 def main():
-    iagitup.check_ia_credentials()
+    s3_keys = None
+    if args.s3_access is not None and args.s3_secret is not None:
+        s3_keys = (args.s3_access, args.s3_secret)
+    ia_session = iagitup.get_ia_session(s3_keys)
 
-    URL = args.url
+    repo_url = args.url
     custom_metadata = args.metadata
     custom_meta_dict = None
 
-    print(f":: Downloading {URL} repository...")
-    gh_repo_data, repo_folder = iagitup.repo_download(URL)
+    print(f":: Downloading {repo_url} repository...")
+    repo_data, repo_dir = iagitup.repo_download(repo_url)
 
     # parse supplemental metadata.
-    if custom_metadata != None:
+    if custom_metadata is not None:
         custom_meta_dict = {}
         for meta in custom_metadata.split(','):
             k, v = meta.split(':')
             custom_meta_dict[k] = v
 
     # upload the repo on IA
-    identifier, meta, bundle_filename = iagitup.upload_ia(repo_folder, gh_repo_data, custom_meta=custom_meta_dict)
+    identifier, meta, bundle_filename = iagitup.upload_ia(
+        github_repo_folder=repo_dir,
+        github_repo_data=repo_data,
+        ia_session=ia_session,
+        custom_meta=custom_meta_dict)
 
     # cleaning
-    shutil.rmtree(repo_folder)
+    shutil.rmtree(repo_dir)
 
     # output
     print("\n:: Upload FINISHED. Item information:")

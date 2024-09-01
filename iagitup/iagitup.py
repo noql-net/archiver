@@ -7,15 +7,13 @@ __author__     = "Giovanni Damiola"
 __copyright__  = "Copyright 2018, Giovanni Damiola"
 __main_name__  = 'iagitup'
 __license__    = 'GPLv3'
-__version__    = "v1.7"
+__version__    = "v1.8"
 
 import os
-import sys
 import subprocess
 import shutil
 import json
-import internetarchive
-import internetarchive.cli
+from internetarchive import get_session
 import git
 import requests
 from datetime import datetime
@@ -35,7 +33,7 @@ def repo_download(github_repo_url):
             github_repo_url -- the GitHub repo home url
 
        returns:
-            gh_repo_data, repo_folder - the repo details and the local repo folder
+            github_repo_data, github_repo_dir - the repo details and the local repo directory
     """
     download_dir = os.path.expanduser('~/.iagitup/downloads')
     mkdirs(os.path.expanduser('~/.iagitup'))
@@ -46,26 +44,26 @@ def repo_download(github_repo_url):
     gh_api_url = "https://api.github.com/repos/{}/{}".format(gh_user, gh_repo)
 
     # delete the temp directory if exists
-    repo_folder = os.path.join(download_dir, gh_repo)
-    if os.path.exists(repo_folder):
-        shutil.rmtree(repo_folder)
+    github_repo_dir = os.path.join(download_dir, gh_repo)
+    if os.path.exists(github_repo_dir):
+        shutil.rmtree(github_repo_dir)
 
     # get the data from GitHub api
     req = requests.get(gh_api_url)
     if req.status_code == 200:
-        gh_repo_data = json.loads(req.text)
+        github_repo_data = json.loads(req.text)
         # download the repo from github
-        repo_folder = os.path.join(download_dir, gh_repo)
+        github_repo_dir = os.path.join(download_dir, gh_repo)
         try:
-            git.Git().clone(gh_repo_data['clone_url'], repo_folder)
+            git.Git().clone(github_repo_data['clone_url'], github_repo_dir)
         except Exception as e:
-            print('Error occurred while downloading: {}'.format(github_repo_url))
+            print(f'Error occurred while downloading: {github_repo_url}')
             print(str(e))
             exit(1)
     else:
-        raise ValueError('Error occurred while downloading: {}'.format(github_repo_url))
+        raise ValueError(f'Error occurred while downloading: {github_repo_url}. Status code: {req.status_code}')
 
-    return gh_repo_data, repo_folder
+    return github_repo_data, github_repo_dir
 
 
 def get_description_from_readme(gh_repo_folder):
@@ -115,44 +113,43 @@ def create_bundle(gh_repo_folder, repo_name):
         raise ValueError('Error creating bundle, directory does not exist: {}'.format(gh_repo_folder))
     return bundle_path
 
-def upload_ia(gh_repo_folder, gh_repo_data, custom_meta=None):
+def upload_ia(*, github_repo_folder, github_repo_data, ia_session, custom_meta=None):
     """Uploads the bundle to the Internet Archive.
 
         arguments:
-                gh_repo_folder  -- path to the bundle
-                gh_repo_data    -- repository metadata
+                github_repo_folder  -- path to the bundle
+                github_repo_data    -- repository metadata
                 custom_meta     -- custom metadata
 
         returns:
-                itemname        -- Internet Archive item identifier
+                item_name        -- Internet Archive item identifier
                 meta            -- the item metadata
                 bundle_filename -- the git bundle filename
     """
     # formatting some dates string
-    d = datetime.strptime(gh_repo_data['created_at'], '%Y-%m-%dT%H:%M:%SZ')
-    pushed = datetime.strptime(gh_repo_data['pushed_at'], '%Y-%m-%dT%H:%M:%SZ')
+    pushed = datetime.strptime(github_repo_data['pushed_at'], '%Y-%m-%dT%H:%M:%SZ')
     pushed_date = pushed.strftime('%Y-%m-%d_%H-%M-%S')
     raw_pushed_date = pushed.strftime('%Y-%m-%d %H:%M:%S')
     date = pushed.strftime('%Y-%m-%d')
     year = pushed.year
 
     # preparing some names
-    repo_name = gh_repo_data['full_name'].replace('/', '-')
-    originalurl = gh_repo_data['html_url']
+    repo_name = github_repo_data['full_name'].replace('/', '-')
+    original_url = github_repo_data['html_url']
     bundle_filename = '{}_-_{}'.format(repo_name, pushed_date)
 
     # preparing some description
     description_footer = f'To restore the repository download the bundle <pre><code>wget https://archive.org/download/github.com-{bundle_filename}/{bundle_filename}.bundle</code></pre> and run: <pre><code> git clone {bundle_filename}.bundle </code></pre>'
-    description = f'<br/> {gh_repo_data['description']} <br/><br/> {get_description_from_readme(gh_repo_folder)} <br/>{description_footer}'
+    description = f'<br/> {github_repo_data['description']} <br/><br/> {get_description_from_readme(github_repo_folder)} <br/>{description_footer}'
 
     # preparing uploader metadata
-    uploader_url = gh_repo_data['owner']['html_url']
-    uploader_name = gh_repo_data['owner']['login']
+    uploader_url = github_repo_data['owner']['html_url']
+    uploader_name = github_repo_data['owner']['login']
 
     # let's grab the avatar too
-    uploader_avatar_url = gh_repo_data['owner']['avatar_url']
+    uploader_avatar_url = github_repo_data['owner']['avatar_url']
     pic = requests.get(uploader_avatar_url, stream = True)
-    uploader_avatar_path = os.path.join(gh_repo_folder, 'cover.jpg')
+    uploader_avatar_path = os.path.join(github_repo_folder, 'cover.jpg')
     with open(uploader_avatar_path, 'wb') as f:
         pic.raw.decode_content = True
         shutil.copyfileobj(pic.raw, f)
@@ -164,20 +161,20 @@ def upload_ia(gh_repo_folder, gh_repo_data, custom_meta=None):
 
     uploader = f'{__main_name__} - {__version__}'
 
-    description = f'{description} <br/><br/>Source: <a href="{originalurl}">{originalurl}</a><br/>Uploader: <a href="{uploader_url}">{uploader_name}</a><br/>Upload date: {date}'
+    description = f'{description} <br/><br/>Source: <a href="{original_url}">{original_url}</a><br/>Uploader: <a href="{uploader_url}">{uploader_name}</a><br/>Upload date: {date}'
 
     ## Creating bundle file of  the  git repo
     try:
-        bundle_file = create_bundle(gh_repo_folder, bundle_filename)
+        bundle_file = create_bundle(github_repo_folder, bundle_filename)
     except ValueError as err:
         print(str(err))
-        shutil.rmtree(gh_repo_folder)
+        shutil.rmtree(github_repo_folder)
         exit(1)
 
     # inizializing the internet archive item name
     # here we set the ia identifier
-    itemname = f'github.com-{repo_name}_-_{pushed_date}'
-    title = itemname
+    item_name = f'github.com-{repo_name}_-_{pushed_date}'
+    title = item_name
 
     #initializing the main metadata
     meta = dict(
@@ -189,57 +186,68 @@ def upload_ia(gh_repo_folder, gh_repo_data, custom_meta=None):
         date=date,
         subject=subject,
         uploaded_with=uploader,
-        originalurl=originalurl,
+        originalurl=original_url,
         pushed_date=raw_pushed_date,
         description=description
     )
 
     # override default metadata with any supplemental metadata provided.
-    if custom_meta != None:
+    if custom_meta is not None:
         meta.update(custom_meta)
 
     try:
         # upload the item to the Internet Archive
         print(f"Creating item on Internet Archive: {meta['title']}")
-        item = internetarchive.get_item(itemname)
+        item = ia_session.get_item(item_name)
         # checking if the item already exists:
         if not item.exists:
             print(f"Uploading file to the internet archive: {bundle_file}")
             item.upload(bundle_file, metadata=meta, retries=9001, request_kwargs=dict(timeout=9001), delete=False)
             # upload the item to the Internet Archive
             print("Uploading avatar...")
-            item.upload(os.path.join(gh_repo_folder, 'cover.jpg'), retries=9001, request_kwargs=dict(timeout=9001), delete=True)
+            item.upload(os.path.join(github_repo_folder, 'cover.jpg'), retries=9001, request_kwargs=dict(timeout=9001), delete=True)
         else:
             print("\nSTOP: The same repository seems already archived.")
-            print(f"---->>  Archived repository URL: \n \thttps://archive.org/details/{itemname}")
-            print(f"---->>  Archived git bundle file: \n \thttps://archive.org/download/{itemname}/{bundle_filename}.bundle \n\n")
-            shutil.rmtree(gh_repo_folder)
+            print(f"---->>  Archived repository URL: \n \thttps://archive.org/details/{item_name}")
+            print(f"---->>  Archived git bundle file: \n \thttps://archive.org/download/{item_name}/{bundle_filename}.bundle \n\n")
+            shutil.rmtree(github_repo_folder)
             exit(0)
 
     except Exception as e:
         print(str(e))
-        shutil.rmtree(gh_repo_folder)
+        shutil.rmtree(github_repo_folder)
         exit(1)
 
     # return item identifier and metadata as output
-    return itemname, meta, bundle_filename
+    return item_name, meta, bundle_filename
 
-def check_ia_credentials():
-    """checks if the internet archive credentials are present.
+def get_ia_session(s3_keys = None):
+    """creates an ia (Internet Archive) session. If no s3_keys is provided tries to configure ia interactively.
 
+        arguments:
+            s3_keys   --  tuple (access, secret) for S3 access (optional)
         returns:
-            exit(1) if there are no local credentialas.
+            ia session or None if no s3 keys are provided and interactive configuration fails.
     """
-    filename = os.path.expanduser('~/.ia')
-    filename2 = os.path.expanduser('~/.config/ia.ini')
-    if not os.path.exists(filename) and not os.path.exists(filename2):
+    if s3_keys is not None:
+        return get_session(config={'s3': {'access': s3_keys[0], 'secret': s3_keys[1]}})
+
+    config_file = os.path.expanduser('~/.config/ia.ini')
+    if not os.path.exists(config_file):
+        # fallback config file
+        config_file = os.path.expanduser('~/.ia')
+
+    if not os.path.exists(config_file):
         msg = '\nWARNING - It looks like you need to configure your Internet Archive account!\n \
-        for registation go to https://archive.org/account/login.createaccount.php\n'
+        for registration go to https://archive.org/account/login.createaccount.php\n'
         print(msg)
         try:
-            noauth = subprocess.call(["ia", "configure"])
-            if noauth:
+            failed = subprocess.call(["ia", "configure"])
+            if failed:
                 exit(1)
         except Exception as e:
-            msg = f'Something went wrong trying to configure your internet archive account.\n Error - {str(e)}'
+            msg = f'\nSomething went wrong trying to configure your internet archive account.\n Error - {str(e)}'
+            print(msg)
             exit(1)
+
+    return get_session(config_file=config_file)
