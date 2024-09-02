@@ -1,0 +1,42 @@
+on:
+  schedule: [cron: "30 3 * * 2"]
+  workflow_dispatch: {}
+
+jobs:
+  run_archiver:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install .
+        pip install build
+
+    - name: Print version
+      run: python main.py -v
+
+    - name: Archive repos
+      run: |
+        # loop through repositories/list.txt lines. Adding an empty line in case the last line didn't have \n at the end
+        { cat repositories/list.txt; echo; } | while IFS= read -r line || [ -n "$line" ]; do
+          echo "Processing line: $line"
+          if ! python main.py --s3-access "${{ secrets.S3_ACCESS }}" --s3-secret "${{ secrets.S3_SECRET }}" "$line"; then
+            echo "Error processing line: $line" >> failed_lines.txt
+          fi
+        done
+
+        # If any errors occurred, display the log and exit with an error code
+        if [ -f failed_lines.txt ]; then
+          echo "Failed lines:"
+          cat failed_lines.txt
+          exit 1
+        else
+          echo "All lines processed successfully."
+        fi
+
