@@ -66,6 +66,13 @@ Just download the _.bundle_ file and run:
     git clone file.bundle
 
 
+## Scheduler
+The workflow defined in [.github/workflows/job.yml](/.github/workflows/job.yml) runs `iagitup` on a schedule. 
+As a one-time setup you need to copy values from https://archive.org/account/s3.php as 
+[GitHub Secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository)
+under names `S3_ACCESS` and `S3_SECRET`. Then update the list of repositories in 
+[repositories/list.txt](/repositories/list.txt).
+
 ## License (GPLv3)
 
 Copyright (C) 2017-2018 Giovanni Damiola
