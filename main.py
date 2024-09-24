@@ -44,6 +44,9 @@ parser.add_argument('url', type=str, help='[GITHUB REPO] to archive')
 args = parser.parse_args()
 
 def main():
+    if args.url == "":
+        return
+
     s3_keys = None
     if args.s3_access is not None and args.s3_secret is not None:
         s3_keys = (args.s3_access, args.s3_secret)
