@@ -1,2 +1,2 @@
-https://github.com/sindresorhus/awesome
-https://github.com/szabgab/awesome-lists
+https://github.com/bepass-org/oblivion
+https://github.com/bepass-org/oblivion-desktop
