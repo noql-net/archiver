@@ -9,7 +9,7 @@ readme = "README.md"
 python = "^3.12"
 internetarchive = "^3.6.0"
 gitpython = "^3.1.42"
-markdown2 = "^2.4.12"
+markdown2 = "^2.5.1"
 
 
 [build-system]
