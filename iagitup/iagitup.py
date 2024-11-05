@@ -202,10 +202,10 @@ def upload_ia(*, github_repo_folder, github_repo_data, ia_session, custom_meta=N
         # checking if the item already exists:
         if not item.exists:
             print(f"Uploading file to the internet archive: {bundle_file}")
-            item.upload(bundle_file, metadata=meta, retries=9001, request_kwargs=dict(timeout=9001), delete=False)
+            item.upload(bundle_file, metadata=meta, retries=3, verbose=True, delete=False)
             # upload the item to the Internet Archive
             print("Uploading avatar...")
-            item.upload(os.path.join(github_repo_folder, 'cover.jpg'), retries=9001, request_kwargs=dict(timeout=9001), delete=True)
+            item.upload(os.path.join(github_repo_folder, 'cover.jpg'), retries=3, verbose=True, delete=True)
         else:
             print("\nSTOP: The same repository seems already archived.")
             print(f"---->>  Archived repository URL: \n \thttps://archive.org/details/{item_name}")
