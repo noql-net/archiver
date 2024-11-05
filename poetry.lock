@@ -230,18 +230,19 @@ files = [
 
 [[package]]
 name = "markdown2"
-version = "2.4.12"
+version = "2.5.1"
 description = "A fast and complete Python implementation of Markdown"
 optional = false
-python-versions = ">=3.5, <4"
+python-versions = "<4,>=3.8"
 files = [
-    {file = "markdown2-2.4.12-py2.py3-none-any.whl", hash = "sha256:98f47591006f0ace0644cbece03fed6f3845513286f6c6e9f8bcf6a575174e2c"},
-    {file = "markdown2-2.4.12.tar.gz", hash = "sha256:1bc8692696954d597778e0e25713c14ca56d87992070dedd95c17eddaf709204"},
+    {file = "markdown2-2.5.1-py2.py3-none-any.whl", hash = "sha256:190ae60a4bd0425c60c863bede18a9f3d45b1cbf3fbc9f40b4fac336ff2c520b"},
+    {file = "markdown2-2.5.1.tar.gz", hash = "sha256:12fc04ea5a87f7bb4b65acf5bf3af1183b20838cc7d543b74c92ec7eea4bbc74"},
 ]
 
 [package.extras]
-all = ["pygments (>=2.7.3)", "wavedrom"]
+all = ["latex2mathml", "pygments (>=2.7.3)", "wavedrom"]
 code-syntax-highlighting = ["pygments (>=2.7.3)"]
+latex = ["latex2mathml"]
 wavedrom = ["wavedrom"]
 
 [[package]]
@@ -327,4 +328,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "a5296461c5679b8b0e0f92c9fa1584f64c5cbc8c93eddf241748098e855eb9b7"
+content-hash = "5c3f255be4ed7feefa5e3b6a44171b8f2caf120cd03ceb78c06c245472be166e"
