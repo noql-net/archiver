@@ -122,16 +122,6 @@ files = [
 ]
 
 [[package]]
-name = "docopt"
-version = "0.6.2"
-description = "Pythonic argument parser, that will make you smile"
-optional = false
-python-versions = "*"
-files = [
-    {file = "docopt-0.6.2.tar.gz", hash = "sha256:49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491"},
-]
-
-[[package]]
 name = "gitdb"
 version = "4.0.11"
 description = "Git Object Database"
@@ -179,17 +169,16 @@ all = ["flake8 (>=7.1.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.6.2
 
 [[package]]
 name = "internetarchive"
-version = "4.1.0"
+version = "5.0.1"
 description = "A Python interface to archive.org."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "internetarchive-4.1.0-py3-none-any.whl", hash = "sha256:0a0e30ade737f7be971b31c38b8c856867a316c5b1d646f055b2b1946aa9cb00"},
-    {file = "internetarchive-4.1.0.tar.gz", hash = "sha256:467188386218d2c77815ca798a51dd18310b326841113bb462b24ea9a71beedc"},
+    {file = "internetarchive-5.0.1-py3-none-any.whl", hash = "sha256:402af478facb6f7405850435a903ee933f653e75f2f2daa2d903163f1ec12a24"},
+    {file = "internetarchive-5.0.1.tar.gz", hash = "sha256:a3c480673a458e3818c3885d7091fede628b9037ba5a10203fbb031be869c818"},
 ]
 
 [package.dependencies]
-docopt = ">=0.6.0,<0.7.0"
 jsonpatch = ">=0.4"
 requests = ">=2.25.0,<3.0.0"
 schema = ">=0.4.0"
@@ -197,11 +186,11 @@ tqdm = ">=4.0.0"
 urllib3 = ">=1.26.0"
 
 [package.extras]
-all = ["black", "mypy", "pre-commit", "pytest", "pytest (==7.1.2)", "responses (==0.20.0)", "ruff (==0.0.269)", "safety", "setuptools", "tqdm-stubs (>=0.2.0)", "types-colorama", "types-docopt (>=0.6.10,<0.7.0)", "types-jsonpatch (>=0.1.0a0)", "types-pygments", "types-requests (>=2.25.0,<3.0.0)", "types-setuptools", "types-ujson (>=4.2.0)", "types-urllib3 (>=1.26.0)"]
+all = ["black", "mypy", "pre-commit", "pytest", "pytest (==7.1.2)", "responses (==0.20.0)", "ruff (==0.0.269)", "safety", "setuptools", "tqdm-stubs (>=0.2.0)", "types-colorama", "types-jsonpatch (>=0.1.0a0)", "types-pygments", "types-requests (>=2.25.0,<3.0.0)", "types-setuptools", "types-ujson (>=4.2.0)", "types-urllib3 (>=1.26.0)"]
 dev = ["black", "mypy", "pre-commit", "pytest", "safety", "setuptools"]
 docs = ["alabaster (==0.7.12)", "docutils (<0.18)", "sphinx (==4.5.0)", "sphinx-autodoc-typehints (==1.18.1)"]
 test = ["pytest (==7.1.2)", "responses (==0.20.0)", "ruff (==0.0.269)"]
-types = ["tqdm-stubs (>=0.2.0)", "types-colorama", "types-docopt (>=0.6.10,<0.7.0)", "types-jsonpatch (>=0.1.0a0)", "types-pygments", "types-requests (>=2.25.0,<3.0.0)", "types-setuptools", "types-ujson (>=4.2.0)", "types-urllib3 (>=1.26.0)"]
+types = ["tqdm-stubs (>=0.2.0)", "types-colorama", "types-jsonpatch (>=0.1.0a0)", "types-pygments", "types-requests (>=2.25.0,<3.0.0)", "types-setuptools", "types-ujson (>=4.2.0)", "types-urllib3 (>=1.26.0)"]
 
 [[package]]
 name = "jsonpatch"
@@ -328,4 +317,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "ce7e9dde6ab1ade4aec555d780d8ff6ee2375c8b9a66bab50962f428d031be2e"
+content-hash = "11514ac3bf43905b3b58f2b5fa267ba4a365c1924b762e961a1ea1adba7feb66"
