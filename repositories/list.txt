@@ -8,3 +8,7 @@ https://github.com/ircfspace/location
 https://github.com/ircfspace/fragment
 https://github.com/soroushmirzaei/telegram-configs-collector
 https://github.com/Chocolate4U/Iran-sing-box-rules
+https://github.com/TheyCallMeSecond/config-examples
+https://github.com/TheyCallMeSecond/Argo
+https://github.com/TheyCallMeSecond/sing-box-manager
+https://github.com/TheyCallMeSecond/WARP-Endpoint-IP
