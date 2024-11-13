@@ -19,3 +19,10 @@ https://github.com/2dust/AndroidLibXrayLite
 https://github.com/2dust/v2flyNG
 https://github.com/2dust/D-Tools
 https://github.com/2dust/clashN
+https://github.com/xchacha20-poly1305/airport2hell
+https://github.com/xchacha20-poly1305/anchor
+https://github.com/xchacha20-poly1305/AnPing
+https://github.com/xchacha20-poly1305/AnSip
+https://github.com/xchacha20-poly1305/antibody
+https://github.com/xchacha20-poly1305/husi
+https://github.com/xchacha20-poly1305/TLS-scribe
