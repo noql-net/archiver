@@ -4,7 +4,7 @@ on:
 
 jobs:
   run_archiver:
-    timeout-minutes: 15
+    timeout-minutes: 300
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
