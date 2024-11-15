@@ -33,3 +33,14 @@ https://github.com/tun2proxy/socks5-impl
 https://github.com/tun2proxy/slirpnetstack
 https://github.com/tun2proxy/dns2socks
 https://github.com/tun2proxy/socks-hub
+https://github.com/vfarid/v2ray-worker
+https://github.com/arshiacomplus/WarpScanner
+https://github.com/MortezaBashsiz/CFScanner
+https://github.com/GFW-knocker/MahsaNG
+https://github.com/GFW-knocker/Xray-core
+https://github.com/Surfboardv2ray/batch-fragment-scanner
+https://github.com/Surfboardv2ray/v2ray-refiner
+https://github.com/Surfboardv2ray/Trojan-worker
+https://github.com/lord-alfred/ipranges
+https://github.com/ByteMysticRogue/Hiddify-Warp
+https://github.com/kyochikuto/sing-box-plus
