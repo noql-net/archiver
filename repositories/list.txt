@@ -26,3 +26,10 @@ https://github.com/xchacha20-poly1305/AnSip
 https://github.com/xchacha20-poly1305/antibody
 https://github.com/xchacha20-poly1305/husi
 https://github.com/xchacha20-poly1305/TLS-scribe
+https://github.com/tun2proxy/tun2proxy
+https://github.com/tun2proxy/tproxy-config
+https://github.com/tun2proxy/wintun-bindings
+https://github.com/tun2proxy/socks5-impl
+https://github.com/tun2proxy/slirpnetstack
+https://github.com/tun2proxy/dns2socks
+https://github.com/tun2proxy/socks-hub
