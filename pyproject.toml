@@ -5,7 +5,7 @@ package-mode = false
 python = "^3.12"
 internetarchive = "^5.0.5"
 gitpython = "^3.1.43"
-markdown2 = "^2.5.1"
+markdown2 = "^2.5.2"
 
 
 [build-system]
