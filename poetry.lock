@@ -169,13 +169,13 @@ all = ["flake8 (>=7.1.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.6.2
 
 [[package]]
 name = "internetarchive"
-version = "5.0.5"
+version = "5.2.0"
 description = "A Python interface to archive.org."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.9"
 files = [
-    {file = "internetarchive-5.0.5-py3-none-any.whl", hash = "sha256:598faa6467ad8b0c680ba998bbe454912782a6bb9cfb0fcdf7dbde848d030813"},
-    {file = "internetarchive-5.0.5.tar.gz", hash = "sha256:8abe722462eee3c03d86f9cc9a2178ba3624b8d4fde9cff0f585c731b6b9de57"},
+    {file = "internetarchive-5.2.0-py3-none-any.whl", hash = "sha256:e8c46cc9a0ec7ba072970e6af90897a5e20db39ecb914b63ebdf95634ab57799"},
+    {file = "internetarchive-5.2.0.tar.gz", hash = "sha256:73aaffdb1e91bcb5ef4721822c92f5f3667e46c0721b93efee070de8ab6223e7"},
 ]
 
 [package.dependencies]
@@ -185,10 +185,10 @@ tqdm = ">=4.0.0"
 urllib3 = ">=1.26.0"
 
 [package.extras]
-all = ["black", "mypy", "pre-commit", "pytest", "pytest (==7.1.2)", "responses (==0.20.0)", "ruff (==0.0.269)", "safety", "setuptools", "tqdm-stubs (>=0.2.0)", "types-colorama", "types-jsonpatch (>=0.1.0a0)", "types-pygments", "types-requests (>=2.25.0,<3.0.0)", "types-setuptools", "types-ujson (>=4.2.0)", "types-urllib3 (>=1.26.0)"]
+all = ["black", "mypy", "pre-commit", "pytest", "pytest (==7.1.2)", "responses (==0.20.0)", "ruff (==0.8.5)", "safety", "setuptools", "tqdm-stubs (>=0.2.0)", "types-colorama", "types-jsonpatch (>=0.1.0a0)", "types-pygments", "types-requests (>=2.25.0,<3.0.0)", "types-setuptools", "types-ujson (>=4.2.0)", "types-urllib3 (>=1.26.0)"]
 dev = ["black", "mypy", "pre-commit", "pytest", "safety", "setuptools"]
 docs = ["alabaster (==0.7.12)", "docutils (<0.18)", "sphinx (==4.5.0)", "sphinx-autodoc-typehints (==1.18.1)"]
-test = ["pytest (==7.1.2)", "responses (==0.20.0)", "ruff (==0.0.269)"]
+test = ["pytest (==7.1.2)", "responses (==0.20.0)", "ruff (==0.8.5)"]
 types = ["tqdm-stubs (>=0.2.0)", "types-colorama", "types-jsonpatch (>=0.1.0a0)", "types-pygments", "types-requests (>=2.25.0,<3.0.0)", "types-setuptools", "types-ujson (>=4.2.0)", "types-urllib3 (>=1.26.0)"]
 
 [[package]]
@@ -305,4 +305,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "3ee018cdad980bb4b16a2936f286a2c9a9dfcaca0f1afb3361574ef633cec473"
+content-hash = "fa1c49388bc8e469e8781fa3cb44be854e45138670f972d69456d8f1476a022f"
