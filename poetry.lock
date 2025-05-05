@@ -176,14 +176,14 @@ all = ["flake8 (>=7.1.1)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "ruff (>=0.6.2
 
 [[package]]
 name = "internetarchive"
-version = "5.3.1"
+version = "5.4.0"
 description = "A Python interface to archive.org."
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "internetarchive-5.3.1-py3-none-any.whl", hash = "sha256:6f2b06952e8b9ee637a1e3c4b36efde2bc3fcb33310930b82dbbc65b2b2a31ad"},
-    {file = "internetarchive-5.3.1.tar.gz", hash = "sha256:f7d66fab38dcf64a6e361b71a199b5c3631f5fb95dfef7688600ee5d90997eab"},
+    {file = "internetarchive-5.4.0-py3-none-any.whl", hash = "sha256:4d5c9b059a68172439b2b1e00e84133ab6bc3b2f758fa2bc91f72fac552b215d"},
+    {file = "internetarchive-5.4.0.tar.gz", hash = "sha256:869d6606210d333c7faca709196fad9bdcb925b614c134920ce8eb24b82ecffd"},
 ]
 
 [package.dependencies]
@@ -320,4 +320,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "f3f808b76131b0a4ddf9bcc60354c6acccae0f9fbc4e30e7d30792303c704dde"
+content-hash = "43faa781a1c2c5f479ecf579c97e849589e8bf2a11a70d4be088c5147c1e709b"
