@@ -46,3 +46,4 @@ https://github.com/lord-alfred/ipranges
 https://github.com/ByteMysticRogue/Hiddify-Warp
 https://github.com/kyochikuto/sing-box-plus
 https://github.com/ShadowZagrosDev/oblivion-helper
+https://github.com/soroushdeimi/sush-core
