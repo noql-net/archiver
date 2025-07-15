@@ -2,6 +2,9 @@ on:
   schedule: [cron: "30 3 * * 2"]
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 jobs:
   run_archiver:
     timeout-minutes: 300
