@@ -12,6 +12,19 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Check GitHub API Rate Limit
+      run: |
+        rate_limit_info=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/rate_limit)
+        core_remaining=$(echo "$rate_limit_info" | jq .resources.core.remaining)
+
+        echo "GitHub API Rate Limit Status:"
+        echo "$rate_limit_info" | jq -r '.resources.core | "  Limit: \(.limit), Remaining: \(.remaining), Used: \(.used), Resets: \(.reset | todate)"'
+
+        if [ "$core_remaining" -eq 0 ]; then
+          echo "::error::GitHub API rate limit exceeded. No remaining requests."
+          exit 1
+        fi
+
     - name: Install uv
       uses: astral-sh/setup-uv@v6
       with:
