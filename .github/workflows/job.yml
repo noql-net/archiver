@@ -46,4 +46,5 @@ jobs:
         else
           echo "All lines processed successfully."
         fi
-
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

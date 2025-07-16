@@ -49,7 +49,11 @@ def repo_download(github_repo_url):
         shutil.rmtree(github_repo_dir)
 
     # get the data from GitHub api
-    req = requests.get(gh_api_url)
+    headers = {}
+    if 'GITHUB_TOKEN' in os.environ:
+        headers['Authorization'] = 'Bearer {0}'.format(os.environ['GITHUB_TOKEN'])
+
+    req = requests.get(gh_api_url, headers=headers)
     if req.status_code == 200:
         github_repo_data = json.loads(req.text)
         # download the repo from github
