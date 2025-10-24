@@ -236,7 +236,7 @@ def get_ia_session(s3_keys = None):
     if s3_keys is not None:
         return get_session(config={'s3': {'access': s3_keys[0], 'secret': s3_keys[1]}})
 
-    config_file = os.path.expanduser('~/.config/ia.ini')
+    config_file = os.path.expanduser('~/.config/internetarchive/ia.ini')
     if not os.path.exists(config_file):
         # fallback config file
         config_file = os.path.expanduser('~/.ia')

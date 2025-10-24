@@ -1,7 +1,7 @@
 [project]
-name = ""
+name = "archiver"
 version = "0.0.1"
-requires-python = "~=3.12.0"
+requires-python = "~=3.14.0"
 dependencies = [
     "internetarchive~=5.7.0",
     "gitpython~=3.1.44",
