@@ -135,7 +135,7 @@ def upload_ia(*, github_repo_folder, github_repo_data, ia_session, custom_meta=N
     pushed_date = pushed.strftime('%Y-%m-%d_%H-%M-%S')
     raw_pushed_date = pushed.strftime('%Y-%m-%d %H:%M:%S')
     date = pushed.strftime('%Y-%m-%d')
-    year = pushed.year
+    year = pushed.strftime('%Y')
 
     # preparing some names
     repo_name = github_repo_data['full_name'].replace('/', '-')
