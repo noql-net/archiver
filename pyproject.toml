@@ -5,7 +5,7 @@ requires-python = "~=3.14.0"
 dependencies = [
     "internetarchive~=5.7.0",
     "gitpython~=3.1.44",
-    "markdown2~=2.5.3",
+    "markdown2~=2.5.5",
 ]
 
 [tool.uv]
