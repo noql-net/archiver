@@ -28,6 +28,8 @@ https://github.com/dyhkwong/Exclave
 https://github.com/GFW-knocker/MahsaNG
 https://github.com/GFW-knocker/Xray-core
 https://github.com/haishanh/yacd
+https://github.com/Hidden-Node/GooseRelayVPN-AndroidClient
+https://github.com/Hidden-Node/MasterDnsVPN-AndroidClient
 https://github.com/hiddify/hiddify-app
 https://github.com/hiddify/HiddifyNG
 https://github.com/HMBSbige/ShadowsocksR-Android
@@ -38,11 +40,14 @@ https://github.com/ircfspace/location
 https://github.com/ircfspace/tconfig
 https://github.com/ircfspace/warpkey
 https://github.com/jpillora/chisel
+https://github.com/kianmhz/GooseRelayVPN
 https://github.com/kyochikuto/sing-box-plus
 https://github.com/lilendian0x00/xray-knife
 https://github.com/lord-alfred/ipranges
 https://github.com/lowercase78/V2RayN-PRO
 https://github.com/mahsanet/NikaNG
+https://github.com/masterking32/MasterDnsVPN
+https://github.com/masterking32/MasterHttpRelayVPN
 https://github.com/MatsuriDayo/NekoBoxForAndroid
 https://github.com/MatsuriDayo/nekoray
 https://github.com/MetaCubeX/ClashMetaForAndroid
@@ -51,6 +56,8 @@ https://github.com/MortezaBashsiz/CFScanner
 https://github.com/msasanmh/DNSveil
 https://github.com/nasnet-community/neighbor-link
 https://github.com/nasnet-community/solutions
+https://github.com/NullLatency/FlowDriver
+https://github.com/Psiphon-Labs/psiphon-tunnel-core
 https://github.com/PsrkGrmez/ChiselBox
 https://github.com/Ptechgithub/wireguard-go
 https://github.com/SagerNet/sing-box
