@@ -1,5 +1,5 @@
 on:
-  schedule: [cron: "30 3 * * 2"]
+  schedule: [cron: "30 3 * * *"]
   workflow_dispatch: {}
 
 permissions:
@@ -10,8 +10,6 @@ jobs:
     timeout-minutes: 300
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-
     - name: Check GitHub API Rate Limit
       run: |
         rate_limit_info=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/rate_limit)
@@ -25,23 +23,19 @@ jobs:
           exit 1
         fi
 
+    - uses: actions/checkout@v6
+
     - name: Install uv
-      uses: astral-sh/setup-uv@v6
+      uses: astral-sh/setup-uv@v8.1.0
       with:
         enable-cache: true
 
-    - name: "Set up Python"
-      uses: actions/setup-python@v5
-      with:
-        python-version-file: "pyproject.toml"
-    
     - name: Install the project
       run: uv sync --locked --no-dev
 
-    - name: Print version
-      run: uv run python main.py -v
-
     - name: Archive repos
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         # loop through repositories/list.txt lines. Adding an empty line in case the last line didn't have \n at the end
         { cat repositories/list.txt; echo; } | while IFS= read -r line || [ -n "$line" ]; do
@@ -51,13 +45,29 @@ jobs:
           fi
         done
 
-        # If any errors occurred, display the log and exit with an error code
+        summary_file="${GITHUB_STEP_SUMMARY:-/dev/null}"
+
+        # If any errors occurred, display the log and add it to the workflow summary.
         if [ -f failed_lines.txt ]; then
           echo "Failed lines:"
           cat failed_lines.txt
-          exit 1
+
+          {
+            echo "## Archive repos"
+            echo ""
+            echo "Some repositories failed to process."
+            echo ""
+            echo "### Failed lines"
+            echo '```'
+            cat failed_lines.txt
+            echo '```'
+          } >> "$summary_file"
         else
           echo "All lines processed successfully."
+
+          {
+            echo "## Archive repos"
+            echo ""
+            echo "All lines processed successfully."
+          } >> "$summary_file"
         fi
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

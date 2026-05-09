@@ -16,8 +16,12 @@ import json
 from internetarchive import get_session
 import git
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from markdown2 import markdown_path
+
+
+ARCHIVE_INTERVAL = timedelta(days=7)
+IA_DATE_FIELDS = ('publicdate', 'addeddate')
 
 
 def mkdirs(path):
@@ -117,6 +121,56 @@ def create_bundle(gh_repo_folder, repo_name):
         raise ValueError('Error creating bundle, directory does not exist: {}'.format(gh_repo_folder))
     return bundle_path
 
+def parse_ia_datetime(value):
+    if isinstance(value, list):
+        value = value[0] if value else None
+    if value is None:
+        return None
+
+    value = str(value).strip()
+    if not value:
+        return None
+
+    for date_format in ('%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d'):
+        try:
+            return datetime.strptime(value, date_format).replace(tzinfo=timezone.utc)
+        except ValueError:
+            pass
+
+    try:
+        parsed = datetime.fromisoformat(value.replace('Z', '+00:00'))
+    except ValueError:
+        return None
+
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+def get_archive_status(ia_session, original_url, pushed_date, snapshot_identifier):
+    query = 'originalurl:"{}"'.format(original_url.replace('"', '\\"'))
+    latest_archive = None
+    matching_archive = None
+
+    for result in ia_session.search_items(query, fields=['identifier', 'pushed_date', *IA_DATE_FIELDS]):
+        archived_at = None
+        for field in IA_DATE_FIELDS:
+            archived_at = parse_ia_datetime(result.get(field))
+            if archived_at is not None:
+                break
+
+        archive = {
+            'identifier': result.get('identifier'),
+            'archived_at': archived_at,
+        }
+
+        if result.get('pushed_date') == pushed_date or result.get('identifier') == snapshot_identifier:
+            matching_archive = archive
+
+        if archived_at is not None and (latest_archive is None or archived_at > latest_archive['archived_at']):
+            latest_archive = archive
+
+    return latest_archive, matching_archive
+
 def upload_ia(*, github_repo_folder, github_repo_data, ia_session, custom_meta=None):
     """Uploads the bundle to the Internet Archive.
 
@@ -131,6 +185,7 @@ def upload_ia(*, github_repo_folder, github_repo_data, ia_session, custom_meta=N
                 bundle_filename -- the git bundle filename
     """
     # formatting some dates string
+    now = datetime.now(timezone.utc)
     pushed = datetime.strptime(github_repo_data['pushed_at'], '%Y-%m-%dT%H:%M:%SZ')
     pushed_date = pushed.strftime('%Y-%m-%d_%H-%M-%S')
     raw_pushed_date = pushed.strftime('%Y-%m-%d %H:%M:%S')
@@ -141,6 +196,25 @@ def upload_ia(*, github_repo_folder, github_repo_data, ia_session, custom_meta=N
     repo_name = github_repo_data['full_name'].replace('/', '-')
     original_url = github_repo_data['html_url']
     bundle_filename = '{}_-_{}'.format(repo_name, pushed_date)
+    item_name = f'github.com-{repo_name}_-_{pushed_date}'
+
+    latest_archive, matching_archive = get_archive_status(ia_session, original_url, raw_pushed_date, item_name)
+    if matching_archive is not None:
+        print("\nSTOP: The repository is unchanged since the last archived snapshot.")
+        print(f"---->>  Archived repository URL: \n \thttps://archive.org/details/{matching_archive['identifier']}\n")
+        shutil.rmtree(github_repo_folder)
+        exit(0)
+
+    if latest_archive is not None:
+        next_archive_at = latest_archive['archived_at'] + ARCHIVE_INTERVAL
+        if now < next_archive_at:
+            print("\nSTOP: The repository was archived less than one week ago.")
+            print(f"---->>  Archived repository URL: \n \thttps://archive.org/details/{latest_archive['identifier']}")
+            print(f"---->>  Next archive allowed after: {next_archive_at.strftime('%Y-%m-%d %H:%M:%S UTC')}\n")
+            shutil.rmtree(github_repo_folder)
+            exit(0)
+
+    title = item_name
 
     # preparing some description
     description_footer = f'To restore the repository download the bundle <pre><code>wget https://archive.org/download/github.com-{bundle_filename}/{bundle_filename}.bundle</code></pre> and run: <pre><code> git clone {bundle_filename}.bundle </code></pre>'
@@ -174,11 +248,6 @@ def upload_ia(*, github_repo_folder, github_repo_data, ia_session, custom_meta=N
         print(str(err))
         shutil.rmtree(github_repo_folder)
         exit(1)
-
-    # inizializing the internet archive item name
-    # here we set the ia identifier
-    item_name = f'github.com-{repo_name}_-_{pushed_date}'
-    title = item_name
 
     #initializing the main metadata
     meta = dict(
