@@ -13,6 +13,7 @@ import os
 import subprocess
 import shutil
 import json
+import sys
 from internetarchive import get_session
 import git
 import requests
@@ -22,6 +23,13 @@ from markdown2 import markdown_path
 
 ARCHIVE_INTERVAL = timedelta(days=7)
 IA_DATE_FIELDS = ('publicdate', 'addeddate')
+IA_RATE_LIMIT_EXIT_CODE = 75
+IA_RATE_LIMIT_MESSAGES = (
+    'please reduce your request rate',
+    'appears to be spam',
+    'slowdown',
+    's3 is overloaded',
+)
 
 
 def mkdirs(path):
@@ -171,6 +179,20 @@ def get_archive_status(ia_session, original_url, pushed_date, snapshot_identifie
 
     return latest_archive, matching_archive
 
+def is_ia_rate_limit_error(error):
+    response = getattr(error, 'response', None)
+    if response is not None and response.status_code == 429:
+        return True
+
+    error_text = str(error).lower()
+    if response is not None:
+        try:
+            error_text = f'{error_text}\n{response.text.lower()}'
+        except Exception:
+            pass
+
+    return any(message in error_text for message in IA_RATE_LIMIT_MESSAGES)
+
 def upload_ia(*, github_repo_folder, github_repo_data, ia_session, custom_meta=None):
     """Uploads the bundle to the Internet Archive.
 
@@ -287,6 +309,11 @@ def upload_ia(*, github_repo_folder, github_repo_data, ia_session, custom_meta=N
             exit(0)
 
     except Exception as e:
+        if is_ia_rate_limit_error(e):
+            print(f'Internet Archive rate limit detected: {e}')
+            shutil.rmtree(github_repo_folder)
+            sys.exit(IA_RATE_LIMIT_EXIT_CODE)
+
         print(str(e))
         shutil.rmtree(github_repo_folder)
         exit(1)

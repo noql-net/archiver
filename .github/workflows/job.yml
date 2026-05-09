@@ -37,18 +37,56 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        ia_rate_limit_exit_code=75
+
         # loop through repositories/list.txt lines. Adding an empty line in case the last line didn't have \n at the end
         { cat repositories/list.txt; echo; } | while IFS= read -r line || [ -n "$line" ]; do
           echo "Processing line: $line"
-          if ! uv run python main.py --s3-access "${{ secrets.S3_ACCESS }}" --s3-secret "${{ secrets.S3_SECRET }}" "$line"; then
-            echo "Error processing line: $line" >> failed_lines.txt
+          if uv run python main.py --s3-access "${{ secrets.S3_ACCESS }}" --s3-secret "${{ secrets.S3_SECRET }}" "$line"; then
+            continue
+          else
+            status=$?
           fi
+
+          if [ "$status" -eq "$ia_rate_limit_exit_code" ]; then
+            echo "Internet Archive rate limit detected while processing line: $line" | tee rate_limited.txt
+            break
+          fi
+
+          echo "Error processing line: $line" >> failed_lines.txt
         done
 
         summary_file="${GITHUB_STEP_SUMMARY:-/dev/null}"
 
-        # If any errors occurred, display the log and add it to the workflow summary.
-        if [ -f failed_lines.txt ]; then
+        # If rate limits or errors occurred, display the log and add it to the workflow summary.
+        if [ -f rate_limited.txt ]; then
+          echo "Stopped early because Internet Archive rate limiting was detected:"
+          cat rate_limited.txt
+
+          {
+            echo "## Archive repos"
+            echo ""
+            echo "Stopped early because Internet Archive rate limiting was detected."
+            echo ""
+            echo "### Rate limit"
+            echo '```'
+            cat rate_limited.txt
+            echo '```'
+          } >> "$summary_file"
+
+          if [ -f failed_lines.txt ]; then
+            echo "Failed lines before rate limit:"
+            cat failed_lines.txt
+
+            {
+              echo ""
+              echo "### Failed lines before rate limit"
+              echo '```'
+              cat failed_lines.txt
+              echo '```'
+            } >> "$summary_file"
+          fi
+        elif [ -f failed_lines.txt ]; then
           echo "Failed lines:"
           cat failed_lines.txt
 
