@@ -27,6 +27,7 @@ __version__    = "v1.8"
 
 import shutil
 import argparse
+import sys
 
 from iagitup import iagitup
 
@@ -55,9 +56,13 @@ def main():
     repo_url = args.url
     custom_metadata = args.metadata
     custom_meta_dict = None
+    repo_dir = None
 
-    print(f":: Downloading {repo_url} repository...")
-    repo_data, repo_dir = iagitup.repo_download(repo_url)
+    try:
+        repo_data, repo_dir = iagitup.repo_download(repo_url)
+    except Exception as err:
+        print(f"FAIL {repo_url}: download failed: {err}")
+        sys.exit(1)
 
     # parse supplemental metadata.
     if custom_metadata is not None:
@@ -66,21 +71,32 @@ def main():
             k, v = meta.split(':')
             custom_meta_dict[k] = v
 
-    # upload the repo on IA
-    identifier, meta, bundle_filename = iagitup.upload_ia(
-        github_repo_folder=repo_dir,
-        github_repo_data=repo_data,
-        ia_session=ia_session,
-        custom_meta=custom_meta_dict)
-
-    # cleaning
-    shutil.rmtree(repo_dir)
-
-    # output
-    print("\n:: Upload FINISHED. Item information:")
-    print(f"Identifier: {meta['title']}")
-    print(f"Archived repository URL: \n \thttps://archive.org/details/{identifier}")
-    print(f"Archived git bundle file: \n \thttps://archive.org/download/{identifier}/{bundle_filename}.bundle \n\n")
+    try:
+        # upload the repo on IA
+        identifier, meta, bundle_filename = iagitup.upload_ia(
+            github_repo_folder=repo_dir,
+            github_repo_data=repo_data,
+            ia_session=ia_session,
+            custom_meta=custom_meta_dict)
+    except iagitup.ArchiveSkipped as skipped:
+        archive_url = f"https://archive.org/details/{skipped.identifier}"
+        next_archive = ''
+        if skipped.next_archive_at is not None:
+            next_archive = f"; next archive allowed after {skipped.next_archive_at.strftime('%Y-%m-%d %H:%M:%S UTC')}"
+        print(f"SUCCESS {repo_url}: skipped archive ({skipped.reason}); {archive_url}{next_archive}")
+    except iagitup.InternetArchiveRateLimitError as err:
+        print(f"FAIL {repo_url}: Internet Archive rate limit detected: {err}")
+        sys.exit(iagitup.IA_RATE_LIMIT_EXIT_CODE)
+    except Exception as err:
+        print(f"FAIL {repo_url}: archive failed: {err}")
+        sys.exit(1)
+    else:
+        archive_url = f"https://archive.org/details/{identifier}"
+        bundle_url = f"https://archive.org/download/{identifier}/{bundle_filename}.bundle"
+        print(f"SUCCESS {repo_url}: archived {archive_url}; bundle {bundle_url}")
+    finally:
+        if repo_dir is not None:
+            shutil.rmtree(repo_dir, ignore_errors=True)
 
 
 if __name__ == '__main__':

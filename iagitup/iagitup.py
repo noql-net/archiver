@@ -13,7 +13,6 @@ import os
 import subprocess
 import shutil
 import json
-import sys
 from internetarchive import get_session
 import git
 import requests
@@ -30,6 +29,19 @@ IA_RATE_LIMIT_MESSAGES = (
     'slowdown',
     's3 is overloaded',
 )
+
+
+class ArchiveSkipped(Exception):
+    def __init__(self, reason, identifier, bundle_filename=None, next_archive_at=None):
+        self.reason = reason
+        self.identifier = identifier
+        self.bundle_filename = bundle_filename
+        self.next_archive_at = next_archive_at
+        super().__init__(reason)
+
+
+class InternetArchiveRateLimitError(Exception):
+    pass
 
 
 def mkdirs(path):
@@ -73,9 +85,8 @@ def repo_download(github_repo_url):
         try:
             git.Git().clone(github_repo_data['clone_url'], github_repo_dir)
         except Exception as e:
-            print(f'Error occurred while downloading: {github_repo_url}')
-            print(str(e))
-            exit(1)
+            shutil.rmtree(github_repo_dir, ignore_errors=True)
+            raise RuntimeError(f'Error occurred while downloading: {github_repo_url}. {e}') from e
     else:
         raise ValueError(f'Error occurred while downloading: {github_repo_url}. Status code: {req.status_code}')
 
@@ -117,7 +128,6 @@ def create_bundle(gh_repo_folder, repo_name):
         returns:
             bundle_path     --  the path to the bundle file
     """
-    print(gh_repo_folder, repo_name)
     if os.path.exists(gh_repo_folder):
         main_pwd = os.getcwd()
         os.chdir(gh_repo_folder)
@@ -222,25 +232,27 @@ def upload_ia(*, github_repo_folder, github_repo_data, ia_session, custom_meta=N
 
     latest_archive, matching_archive = get_archive_status(ia_session, original_url, raw_pushed_date, item_name)
     if matching_archive is not None:
-        print("\nSTOP: The repository is unchanged since the last archived snapshot.")
-        print(f"---->>  Archived repository URL: \n \thttps://archive.org/details/{matching_archive['identifier']}\n")
-        shutil.rmtree(github_repo_folder)
-        exit(0)
+        raise ArchiveSkipped(
+            'unchanged since the last archived snapshot',
+            matching_archive['identifier'],
+            bundle_filename,
+        )
 
     if latest_archive is not None:
         next_archive_at = latest_archive['archived_at'] + ARCHIVE_INTERVAL
         if now < next_archive_at:
-            print("\nSTOP: The repository was archived less than one week ago.")
-            print(f"---->>  Archived repository URL: \n \thttps://archive.org/details/{latest_archive['identifier']}")
-            print(f"---->>  Next archive allowed after: {next_archive_at.strftime('%Y-%m-%d %H:%M:%S UTC')}\n")
-            shutil.rmtree(github_repo_folder)
-            exit(0)
+            raise ArchiveSkipped(
+                'archived less than one week ago',
+                latest_archive['identifier'],
+                bundle_filename,
+                next_archive_at,
+            )
 
     title = item_name
 
     # preparing some description
     description_footer = f'To restore the repository download the bundle <pre><code>wget https://archive.org/download/github.com-{bundle_filename}/{bundle_filename}.bundle</code></pre> and run: <pre><code> git clone {bundle_filename}.bundle </code></pre>'
-    description = f'<br/> {github_repo_data['description']} <br/><br/> {get_description_from_readme(github_repo_folder)} <br/>{description_footer}'
+    description = f"<br/> {github_repo_data['description']} <br/><br/> {get_description_from_readme(github_repo_folder)} <br/>{description_footer}"
 
     # preparing uploader metadata
     uploader_url = github_repo_data['owner']['html_url']
@@ -267,9 +279,7 @@ def upload_ia(*, github_repo_folder, github_repo_data, ia_session, custom_meta=N
     try:
         bundle_file = create_bundle(github_repo_folder, bundle_filename)
     except ValueError as err:
-        print(str(err))
-        shutil.rmtree(github_repo_folder)
-        exit(1)
+        raise RuntimeError(str(err)) from err
 
     #initializing the main metadata
     meta = dict(
@@ -292,31 +302,23 @@ def upload_ia(*, github_repo_folder, github_repo_data, ia_session, custom_meta=N
 
     try:
         # upload the item to the Internet Archive
-        print(f"Creating item on Internet Archive: {meta['title']}")
         item = ia_session.get_item(item_name)
         # checking if the item already exists:
         if not item.exists:
-            print(f"Uploading file to the internet archive: {bundle_file}")
             item.upload(bundle_file, metadata=meta, retries=3, verbose=False, delete=False)
             # upload the item to the Internet Archive
-            print("Uploading avatar...")
             item.upload(os.path.join(github_repo_folder, 'cover.jpg'), retries=3, verbose=False, delete=True)
         else:
-            print("\nSTOP: The same repository seems already archived.")
-            print(f"---->>  Archived repository URL: \n \thttps://archive.org/details/{item_name}")
-            print(f"---->>  Archived git bundle file: \n \thttps://archive.org/download/{item_name}/{bundle_filename}.bundle \n\n")
-            shutil.rmtree(github_repo_folder)
-            exit(0)
+            raise ArchiveSkipped('already archived', item_name, bundle_filename)
 
     except Exception as e:
-        if is_ia_rate_limit_error(e):
-            print(f'Internet Archive rate limit detected: {e}')
-            shutil.rmtree(github_repo_folder)
-            sys.exit(IA_RATE_LIMIT_EXIT_CODE)
+        if isinstance(e, ArchiveSkipped):
+            raise
 
-        print(str(e))
-        shutil.rmtree(github_repo_folder)
-        exit(1)
+        if is_ia_rate_limit_error(e):
+            raise InternetArchiveRateLimitError(str(e)) from e
+
+        raise RuntimeError(str(e)) from e
 
     # return item identifier and metadata as output
     return item_name, meta, bundle_filename
