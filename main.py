@@ -31,6 +31,8 @@ import sys
 
 from iagitup import iagitup
 
+MAX_ERROR_LENGTH = 180
+
 PROGRAM_DESCRIPTION = 'A tool to archive a GitHub repository to the Internet Archive. \
                        The script downloads the GitHub repository, creates a git bundle and uploads \
                        it to archive.org. https://github.com/gdamdam/iagitup'
@@ -44,6 +46,29 @@ parser.add_argument('--version', '-v', action='version', version=__version__)
 parser.add_argument('url', type=str, help='[GITHUB REPO] to archive')
 args = parser.parse_args()
 
+
+def repo_label_from_url(repo_url):
+    parts = repo_url.rstrip('/').split('/')
+    if len(parts) >= 2:
+        return '/'.join(parts[-2:])
+    return repo_url
+
+
+def short_error(error):
+    message = ' '.join(str(error).split())
+    if len(message) > MAX_ERROR_LENGTH:
+        return f'{message[:MAX_ERROR_LENGTH - 3]}...'
+    return message
+
+
+def short_skip_reason(reason):
+    return {
+        'already archived': 'exists',
+        'archived less than one week ago': 'recent',
+        'unchanged since the last archived snapshot': 'unchanged',
+    }.get(reason, reason)
+
+
 def main():
     if args.url == "":
         return
@@ -54,6 +79,7 @@ def main():
     ia_session = iagitup.get_ia_session(s3_keys)
 
     repo_url = args.url
+    repo_label = repo_label_from_url(repo_url)
     custom_metadata = args.metadata
     custom_meta_dict = None
     repo_dir = None
@@ -61,8 +87,9 @@ def main():
     try:
         repo_data, repo_dir = iagitup.repo_download(repo_url)
     except Exception as err:
-        print(f"FAIL {repo_url}: download failed: {err}")
+        print(f"FAIL {repo_label}: download: {short_error(err)}")
         sys.exit(1)
+    repo_label = repo_data['full_name']
 
     # parse supplemental metadata.
     if custom_metadata is not None:
@@ -73,27 +100,25 @@ def main():
 
     try:
         # upload the repo on IA
-        identifier, meta, bundle_filename = iagitup.upload_ia(
+        identifier, _meta, _bundle_filename = iagitup.upload_ia(
             github_repo_folder=repo_dir,
             github_repo_data=repo_data,
             ia_session=ia_session,
             custom_meta=custom_meta_dict)
     except iagitup.ArchiveSkipped as skipped:
-        archive_url = f"https://archive.org/details/{skipped.identifier}"
-        next_archive = ''
         if skipped.next_archive_at is not None:
-            next_archive = f"; next archive allowed after {skipped.next_archive_at.strftime('%Y-%m-%d %H:%M:%S UTC')}"
-        print(f"SUCCESS {repo_url}: skipped archive ({skipped.reason}); {archive_url}{next_archive}")
+            until = skipped.next_archive_at.strftime('%Y-%m-%d')
+            print(f"SUCCESS {repo_label}: skipped recent until {until} (ia:{skipped.identifier})")
+        else:
+            print(f"SUCCESS {repo_label}: skipped {short_skip_reason(skipped.reason)} (ia:{skipped.identifier})")
     except iagitup.InternetArchiveRateLimitError as err:
-        print(f"FAIL {repo_url}: Internet Archive rate limit detected: {err}")
+        print(f"FAIL {repo_label}: IA rate limit: {short_error(err)}")
         sys.exit(iagitup.IA_RATE_LIMIT_EXIT_CODE)
     except Exception as err:
-        print(f"FAIL {repo_url}: archive failed: {err}")
+        print(f"FAIL {repo_label}: archive: {short_error(err)}")
         sys.exit(1)
     else:
-        archive_url = f"https://archive.org/details/{identifier}"
-        bundle_url = f"https://archive.org/download/{identifier}/{bundle_filename}.bundle"
-        print(f"SUCCESS {repo_url}: archived {archive_url}; bundle {bundle_url}")
+        print(f"SUCCESS {repo_label}: archived (ia:{identifier})")
     finally:
         if repo_dir is not None:
             shutil.rmtree(repo_dir, ignore_errors=True)
